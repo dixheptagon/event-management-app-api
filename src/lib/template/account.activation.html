@@ -4,123 +4,197 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Account Activation</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        line-height: 1.6;
-        color: #333;
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #f4f4f4;
-      }
-      .container {
-        background-color: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      }
-      .header {
-        text-align: center;
-        border-bottom: 3px solid #007bff;
-        padding-bottom: 20px;
-        margin-bottom: 30px;
-      }
-      .logo {
-        font-size: 24px;
-        font-weight: bold;
-        color: #007bff;
-      }
-      .content {
-        margin-bottom: 30px;
-      }
-      .activation-btn {
-        display: inline-block;
-        background-color: #007bff;
-        color: white;
-        padding: 12px 30px;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: bold;
-        margin: 20px 0;
-      }
-      .activation-btn:hover {
-        background-color: #0056b3;
-      }
-      .expiry-notice {
-        background-color: #fff3cd;
-        border: 1px solid #ffeaa7;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 20px 0;
-      }
-      .footer {
-        text-align: center;
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid #eee;
-        font-size: 12px;
-        color: #666;
-      }
-      .timestamp {
-        font-size: 11px;
-        color: #999;
-        margin-top: 10px;
-      }
-    </style>
   </head>
-  <body>
-    <div class="container">
-      <div class="header">
-        <div class="logo">Event APP</div>
-        <h1>Welcome aboard, {{username}}!</h1>
-      </div>
-
-      <div class="content">
-        <p>Hi <strong>{{username}}</strong>,</p>
-
-        <p>
-          Thanks for signing up! To complete your registration and start using
-          Event APP, please activate your account by clicking the button below:
-        </p>
-
-        <div style="text-align: center">
-          <a href="{{activate_link}}" class="activation-btn"
-            >Activate My Account</a
+  <body
+    style="
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    "
+  >
+    <!-- Main Container -->
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="background-color: #f4f4f4; padding: 20px"
+    >
+      <tr>
+        <td align="center">
+          <!-- Email Container -->
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              background-color: #ffffff;
+              border-radius: 10px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+              max-width: 600px;
+            "
           >
-        </div>
+            <!-- Header -->
+            <tr>
+              <td
+                style="
+                  padding: 30px 30px 20px 30px;
+                  text-align: center;
+                  border-bottom: 3px solid #007bff;
+                "
+              >
+                <div
+                  style="
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #007bff;
+                    margin-bottom: 10px;
+                  "
+                >
+                  Event APP
+                </div>
+                <h1
+                  style="
+                    font-size: 28px;
+                    color: #333333;
+                    margin: 10px 0;
+                    font-weight: normal;
+                  "
+                >
+                  Welcome aboard, {{username}}!
+                </h1>
+              </td>
+            </tr>
 
-        <div class="expiry-notice">
-          <strong>⏰ Important:</strong> This activation link will expire in
-          <strong>{{expiry_minutes}} minutes</strong>. Please activate your
-          account as soon as possible.
-        </div>
+            <!-- Content -->
+            <tr>
+              <td style="padding: 30px">
+                <p style="margin: 0 0 15px 0; font-size: 16px">
+                  Hi <strong>{{username}}</strong>,
+                </p>
 
-        <p>
-          If the button doesn't work, you can copy and paste this link into your
-          browser:
-        </p>
-        <p style="word-break: break-all; color: #007bff">{{activate_link}}</p>
+                <p style="margin: 0 0 20px 0; font-size: 16px">
+                  Thanks for signing up! To complete your registration and start
+                  using Event APP, please activate your account by clicking the
+                  button below:
+                </p>
 
-        <p>
-          If you didn't create an account with us, please ignore this email.
-        </p>
+                <!-- Button -->
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="margin: 25px 0"
+                >
+                  <tr>
+                    <td align="center">
+                      <table cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td
+                            style="
+                              background-color: #007bff;
+                              border-radius: 5px;
+                              text-align: center;
+                            "
+                          >
+                            <a
+                              href="{{activate_link}}"
+                              style="
+                                display: inline-block;
+                                padding: 15px 30px;
+                                font-size: 16px;
+                                color: #ffffff;
+                                text-decoration: none;
+                                font-weight: bold;
+                                border-radius: 5px;
+                              "
+                              >Activate My Account</a
+                            >
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
 
-        <p>
-          Best regards,<br />
-          <strong>Event APP Team</strong>
-        </p>
-      </div>
+                <!-- Expiry Notice -->
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="margin: 25px 0"
+                >
+                  <tr>
+                    <td
+                      style="
+                        background-color: #fff3cd;
+                        border: 1px solid #ffeaa7;
+                        padding: 15px;
+                        border-radius: 5px;
+                      "
+                    >
+                      <p style="margin: 0; font-size: 14px; color: #856404">
+                        <strong>⏰ Important:</strong> This activation link will
+                        expire in <strong>{{expiry_minutes}} minutes</strong>.
+                        Please activate your account as soon as possible.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
 
-      <div class="footer">
-        <p>© {{current_year}} Event APP. All rights reserved.</p>
-        <div class="timestamp">Email sent on: <span id="timestamp"></span></div>
-      </div>
-    </div>
+                <p style="margin: 20px 0 10px 0; font-size: 16px">
+                  If the button doesn't work, you can copy and paste this link
+                  into your browser:
+                </p>
+                <p
+                  style="
+                    margin: 0 0 20px 0;
+                    font-size: 14px;
+                    color: #007bff;
+                    word-break: break-all;
+                  "
+                >
+                  {{activate_link}}
+                </p>
 
-    <script>
-      document.getElementById('timestamp').textContent =
-        new Date().toLocaleString();
-    </script>
+                <p style="margin: 0 0 10px 0; font-size: 16px">
+                  If you didn't create an account with us, please ignore this
+                  email.
+                </p>
+
+                <p style="margin: 20px 0 0 0; font-size: 16px">
+                  Best regards,<br />
+                  <strong>Event APP Team</strong>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                style="
+                  padding: 20px 30px 30px 30px;
+                  text-align: center;
+                  border-top: 1px solid #eeeeee;
+                "
+              >
+                <p style="margin: 0 0 10px 0; font-size: 12px; color: #666666">
+                  © {{current_year}} Event APP. All rights reserved.
+                </p>
+                <div style="font-size: 11px; color: #999999; margin-top: 10px">
+                  Email sent on: {{email_timestamp}}
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

@@ -16,7 +16,6 @@ export class ResponseHandler {
     if (success) {
       if (data !== undefined) {
         this.data = data;
-        this.count = data?.length || 0;
       }
     } else {
       if (error !== undefined) {

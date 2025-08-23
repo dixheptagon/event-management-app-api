@@ -11,3 +11,21 @@ export const RegisterSchema = Yup.object().shape({
     ),
   role: Yup.string().required('Role is required'),
 });
+
+export const VerifyEmailSchema = Yup.object().shape({
+  token: Yup.string().required('Verification Token is required'),
+});
+
+export const ResendVerificationSchema = Yup.object().shape({
+  email: Yup.string().email('Invalid email').required('Email is required'),
+});
+
+export const LoginSchema = Yup.object().shape({
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  password: Yup.string()
+    .required('Password is required')
+    .matches(
+      /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
+      'Password must be at least 8 characters long and contain at least one letter and one number',
+    ),
+});

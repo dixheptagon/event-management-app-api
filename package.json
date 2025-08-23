@@ -28,7 +28,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "winston": "^3.17.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "yup": "^1.7.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",

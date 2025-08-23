@@ -26,16 +26,14 @@ app.get('/', (req: Request, res: Response) => {
 
 // import user router
 
-// import userRouter from '@/routers/user/index.user.route';
-// import articleRouter from '@/routers/article/index.article.route';
-// import authRouter from '@/routers/auth/index.auth.route';
+import authRouter from './routers/auth/auth.route';
 
 // // use user router
 
-// const routers = [userRouter, articleRouter, authRouter];
-// routers.forEach((router) => {
-//   app.use('/api', router);
-// });
+const routers = [authRouter];
+routers.forEach((router) => {
+  app.use('/api', router);
+});
 
 // setup error handler middleware
 app.use(errorMiddleware);

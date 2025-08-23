@@ -11,12 +11,15 @@ datasource db {
 
 model User {
   id            String   @id @default(uuid())
-  name          String
+  fullname          String
   email         String   @unique
   password      String
-  role          UserRole
+  role          UserRole @default(customer)
   referralCode  String?  @unique
   points        Int      @default(0)
+  isVerified         Boolean  @default(false)
+  verificationToken      String?   
+  verificationExpiry     DateTime?
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

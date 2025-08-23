@@ -16,7 +16,7 @@ export class SampleRouter {
     this.router.post(
       '/',
       // JwtVerify.verifyToken(process.env.JWT_SECRET_KEY!),
-      this.sampleController.getSampleData
+      this.sampleController.getSampleData,
     );
   }
 

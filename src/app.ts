@@ -48,7 +48,7 @@ export default class App {
 
     this.app.get('/api', (req: Request, res: Response) => {
       res.send(
-        `Hello, Purwadhika student 👋. Have fun working on your mini project ☺️`
+        `Hello, Purwadhika student 👋. Have fun working on your mini project ☺️`,
       );
     });
 

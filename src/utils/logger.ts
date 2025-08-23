@@ -18,15 +18,15 @@ export class LoggerService {
       level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
       format: combine(
         timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        errors({ stack: true })
+        errors({ stack: true }),
       ),
       transports: [
         new transports.Console({
           format: combine(
             colorize(),
             printf(({ message }) =>
-              typeof message === 'string' ? message : JSON.stringify(message)
-            )
+              typeof message === 'string' ? message : JSON.stringify(message),
+            ),
           ),
         }),
         new transports.File({
@@ -36,8 +36,8 @@ export class LoggerService {
         }),
         new transports.File({
           filename: 'logs/warn.log',
-          level: 'warn', 
-          format: logFormat
+          level: 'warn',
+          format: logFormat,
         }),
         new transports.File({
           filename: 'logs/combined.log',

@@ -44,18 +44,22 @@
                 style="
                   padding: 30px 30px 20px 30px;
                   text-align: center;
-                  border-bottom: 3px solid #007bff;
+                  border-bottom: 3px solid #0a2d52;
                 "
               >
                 <div
                   style="
                     font-size: 24px;
                     font-weight: bold;
-                    color: #007bff;
+                    color: #0a2d52;
                     margin-bottom: 10px;
                   "
                 >
-                  Event APP
+                  <img
+                    src="{{logo_url}}"
+                    alt="logo Ticketin.id"
+                    style="max-width: 100px"
+                  />
                 </div>
                 <h1
                   style="
@@ -79,8 +83,8 @@
 
                 <p style="margin: 0 0 20px 0; font-size: 16px">
                   Thanks for signing up! To complete your registration and start
-                  using Event APP, please activate your account by clicking the
-                  button below:
+                  using Ticketin.id, please activate your account by clicking
+                  the button below:
                 </p>
 
                 <!-- Button -->
@@ -97,7 +101,7 @@
                         <tr>
                           <td
                             style="
-                              background-color: #007bff;
+                              background-color: #0a2d52;
                               border-radius: 5px;
                               text-align: center;
                             "
@@ -141,7 +145,7 @@
                     >
                       <p style="margin: 0; font-size: 14px; color: #856404">
                         <strong>⏰ Important:</strong> This activation link will
-                        expire in <strong>{{expiry_minutes}} minutes</strong>.
+                        expire in <strong>{{expiry_hours}} hours</strong>.
                         Please activate your account as soon as possible.
                       </p>
                     </td>
@@ -170,7 +174,7 @@
 
                 <p style="margin: 20px 0 0 0; font-size: 16px">
                   Best regards,<br />
-                  <strong>Event APP Team</strong>
+                  <strong>Ticketin.id Team</strong>
                 </p>
               </td>
             </tr>
@@ -185,7 +189,7 @@
                 "
               >
                 <p style="margin: 0 0 10px 0; font-size: 12px; color: #666666">
-                  © {{current_year}} Event APP. All rights reserved.
+                  © {{current_year}} Ticketin.id. All rights reserved.
                 </p>
                 <div style="font-size: 11px; color: #999999; margin-top: 10px">
                   Email sent on: {{email_timestamp}}

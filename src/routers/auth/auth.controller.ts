@@ -52,8 +52,11 @@ export const RegisterController = async (
 
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    // 15 minutes
-    const verificationExpiry = new Date(Date.now() + 15 * 60 * 1000);
+    // Expiry in 2 hours
+    const verificationExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 Hours
+
+    // Generate Refferal Code
+    const referralCode = crypto.randomBytes(4).toString('hex'); // 4 characters
 
     // Create new user into database
     const user = await database.user.create({
@@ -62,6 +65,7 @@ export const RegisterController = async (
         email,
         password: hashedPassword,
         role: role as UserRole,
+        referralCode,
         verificationToken,
         verificationExpiry,
       },
@@ -70,6 +74,7 @@ export const RegisterController = async (
         fullname: true,
         email: true,
         role: true,
+        referralCode: true,
         isVerified: true,
       },
     });
@@ -78,7 +83,7 @@ export const RegisterController = async (
     const activationLink = `${env.ACTIVATION_ACCOUNT_URL}?token=${verificationToken}`;
 
     // Generate timestamp di server
-    const currentTimestamp = new Date().toLocaleDateString('id-ID', {
+    const currentTimestamp = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -94,26 +99,39 @@ export const RegisterController = async (
     const templateHtml = fs.readFileSync(templateHtmlPath, 'utf-8');
 
     const compiledTemplateHtml = Handlebars.compile(templateHtml);
+
+    // logo_url path
+    const logo_url_path = path.resolve(
+      __dirname,
+      '../../lib/template/logo.png',
+    );
+
     const htmlToSend = compiledTemplateHtml({
       username: user.fullname,
       activate_link: activationLink,
-      expiry_minutes: '15',
+      expiry_hours: 2, // 2 hours
       current_year: new Date().getFullYear(),
       email_timestamp: currentTimestamp,
+      logo_url: logo_url_path,
     });
 
     await transporter.sendMail({
       from: 'Admin <sender@gmail.com>',
       to: user.email,
-      subject: 'Account Activation - Event APP',
-
+      subject: 'Account Activation - ticketin.id',
       html: htmlToSend,
     });
 
     // Send response
     res
-      .status(HttpRes.status.RESOURCE_UPDATED)
-      .json(ResponseHandler.success(HttpRes.message.RESOURCE_UPDATED, user));
+      .status(HttpRes.status.RESOURCE_CREATED)
+      .json(
+        ResponseHandler.success(
+          HttpRes.message.RESOURCE_CREATED +
+            `: user ${user.fullname} has been created`,
+          user,
+        ),
+      );
   } catch (error) {
     next(error);
   }
@@ -134,18 +152,33 @@ export const VerifyEmailController = async (
     const user = await database.user.findFirst({
       where: {
         verificationToken: token,
-        verificationExpiry: {
-          gt: new Date(), // Token belum expired
-        },
-        isVerified: false, // User belum verified
       },
     });
 
+    // Check if user token is invalid
     if (!user) {
       throw new CustomError(
         HttpRes.status.BAD_REQUEST,
-        'Invalid or expired verification token',
-        'The verification link has expired or is invalid. Please request a new verification email.',
+        'Invalid verification token',
+        'The verification link is invalid. Please request a new verification email.',
+      );
+    }
+
+    //  Check if user token is expired
+    if (user.verificationExpiry && user.verificationExpiry <= new Date()) {
+      throw new CustomError(
+        HttpRes.status.BAD_REQUEST,
+        'Verification token has expired',
+        'The verification link has expired. Please request a new verification email.',
+      );
+    }
+
+    // Check if user is already verified
+    if (user.isVerified) {
+      throw new CustomError(
+        HttpRes.status.CONFLICT, // 409 Conflict lebih cocok untuk kasus ini
+        'Email already verified',
+        'Your email address has already been verified. You can log in directly.',
       );
     }
 
@@ -168,18 +201,15 @@ export const VerifyEmailController = async (
     });
 
     // Success response
-    return res
-      .status(HttpRes.status.REDIRECTED)
-      .json({
-        success: true,
-        message:
-          'Email verified successfully! You can now login to your account.',
-        data: {
-          user: verifiedUser,
-          verifiedAt: new Date(),
-        },
-      })
-      .redirect('/login');
+    return res.status(HttpRes.status.ACTION_COMPLETED).json({
+      success: true,
+      message:
+        'Email verified successfully! You can now login to your account.',
+      data: {
+        user: verifiedUser,
+        verifiedAt: new Date(),
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -220,7 +250,7 @@ export const ResendVerificationController = async (
 
     // Generate new verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const verificationExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 Hours
 
     // Update user with new token
     await database.user.update({
@@ -234,7 +264,7 @@ export const ResendVerificationController = async (
     // Send new verification email
     const activationLink = `${env.ACTIVATION_ACCOUNT_URL}?token=${verificationToken}`;
 
-    const currentTimestamp = new Date().toLocaleDateString('id-ID', {
+    const currentTimestamp = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -249,18 +279,26 @@ export const ResendVerificationController = async (
     const templateHtml = fs.readFileSync(templateHtmlPath, 'utf-8');
 
     const compiledTemplateHtml = Handlebars.compile(templateHtml);
+
+    // logo_url path
+    const logo_url_path = path.resolve(
+      __dirname,
+      '../../lib/template/logo.png',
+    );
+
     const htmlToSend = compiledTemplateHtml({
       username: user.fullname,
       activate_link: activationLink,
-      expiry_minutes: '15', // 15 minutes
+      expiry_hours: 2, // 2 hours
       current_year: new Date().getFullYear(),
       email_timestamp: currentTimestamp,
+      logo_url: logo_url_path,
     });
 
     await transporter.sendMail({
       from: 'Admin <sender@gmail.com>',
       to: user.email,
-      subject: 'Account Activation - Event APP (Resent)',
+      subject: 'Account Activation - ticketin.id (Resent)',
       html: htmlToSend,
     });
 
@@ -284,6 +322,7 @@ export const LoginController = async (
   next: NextFunction,
 ) => {
   try {
+    // Validate request body
     const { email, password } = await LoginSchema.validate(req.body, {
       abortEarly: false,
     });
@@ -297,7 +336,7 @@ export const LoginController = async (
       throw new CustomError(
         HttpRes.status.NOT_FOUND,
         HttpRes.message.NOT_FOUND,
-        HttpRes.details.NOT_FOUND + ' : User not found',
+        HttpRes.details.NOT_FOUND + ' : Email or password is incorrect',
       );
     }
 
@@ -316,13 +355,17 @@ export const LoginController = async (
       throw new CustomError(
         HttpRes.status.UNAUTHORIZED,
         HttpRes.message.UNAUTHORIZED,
-        HttpRes.details.UNAUTHORIZED + ' : Invalid password',
+        HttpRes.details.UNAUTHORIZED + ' : Email or password is incorrect',
       );
     }
 
     // Generate JWT token
     const token = createToken(
-      { id: user.id, email: user.email, role: user.role },
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
       env.JWT_SECRET,
       {
         expiresIn: '1d',
@@ -332,7 +375,18 @@ export const LoginController = async (
     // Send response
     res
       .header('Authorization', `Bearer ${token}`)
-      .status(HttpRes.status.OK)
-      .json(ResponseHandler.success(HttpRes.message.OK, { token }));
-  } catch (error) {}
+      .status(HttpRes.status.ACTION_COMPLETED)
+      .json(
+        ResponseHandler.success(
+          HttpRes.message.ACTION_COMPLETED +
+            ` : User ${user.fullname} logged in successfully`,
+          {
+            token,
+            user: { fullname: user.fullname, role: user.role },
+          },
+        ),
+      );
+  } catch (error) {
+    next(error);
+  }
 };

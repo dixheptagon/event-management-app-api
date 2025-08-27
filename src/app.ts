@@ -2,8 +2,13 @@ import express, { Request, Response, Application } from 'express';
 import bodyParser from 'body-parser';
 import { requestLogger } from './lib/middleware/request.logger';
 import { errorMiddleware } from './lib/middleware/error.handler';
+import cors from 'cors';
+
 // setup express
 const app: Application = express();
+
+// setup middleware : CORS
+app.use(cors()); // Semua client dapat mengakses API kita
 
 // setup middleware: body parser
 app.use(bodyParser.json());

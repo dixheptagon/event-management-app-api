@@ -57,6 +57,6 @@ export const HttpRes = Object.freeze({
     BAD_REQUEST: 'The request was invalid or cannot be served',
     INTERNAL_SERVER_ERROR: 'An internal server error occurred',
     SERVICE_UNAVAILABLE: 'The service is currently unavailable',
-    CONFLICT: 'A conflict occurred with the current state of the resource',
+    CONFLICT: 'A conflict occurred',
   },
 });

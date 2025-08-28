@@ -10,6 +10,14 @@ export const RegisterSchema = Yup.object().shape({
       'Password must be at least 8 characters long and contain at least one letter and one number',
     ),
   role: Yup.string().required('Role is required'),
+  usedReferralCode: Yup.string()
+    .optional()
+    .length(8, 'Referral code must be 8 characters')
+    .uppercase('Referral code must be uppercase')
+    .matches(
+      /^[A-F0-9]{8}$/,
+      'Referral code must contain only uppercase letters and numbers',
+    ),
 });
 
 export const VerifyEmailSchema = Yup.object().shape({

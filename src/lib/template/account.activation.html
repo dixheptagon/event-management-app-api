@@ -56,7 +56,7 @@
                   "
                 >
                   <img
-                    src="{{logo_url}}"
+                    src="https://res.cloudinary.com/dzpcr6tzh/image/upload/v1756391824/ticketin_logo_event-management-app_-removebg_rosd8k.png"
                     alt="logo Ticketin.id"
                     style="max-width: 100px"
                   />
@@ -86,6 +86,31 @@
                   using Ticketin.id, please activate your account by clicking
                   the button below:
                 </p>
+
+                {{#if referral_bonus}}
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="margin: 25px 0"
+                >
+                  <tr>
+                    <td
+                      style="
+                        background-color: #e6f7ff;
+                        border: 1px solid #91d5ff;
+                        padding: 15px;
+                        border-radius: 5px;
+                      "
+                    >
+                      <p style="margin: 0; font-size: 14px; color: #0050b3">
+                        🎉 {{referral_bonus}}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                {{/if}}
 
                 <!-- Button -->
                 <table

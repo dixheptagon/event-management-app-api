@@ -27,12 +27,10 @@ export const RegisterController = async (
 ) => {
   try {
     // validate request body
-    const { fullname, email, password, role } = await RegisterSchema.validate(
-      req.body,
-      {
+    const { fullname, email, password, role, usedReferralCode } =
+      await RegisterSchema.validate(req.body, {
         abortEarly: false,
-      },
-    );
+      });
 
     // Check if email already exists in the database
     const existingUser = await database.user.findUnique({
@@ -47,6 +45,31 @@ export const RegisterController = async (
       );
     }
 
+    let referredBy = null;
+    let referralPromotion = null;
+
+    // Check if user used a referral code
+    if (usedReferralCode) {
+      const referrer = await database.user.findUnique({
+        where: { referralCode: usedReferralCode },
+        select: {
+          id: true,
+          fullname: true,
+          referralPoints: true,
+        },
+      });
+
+      if (!referrer) {
+        throw new CustomError(
+          HttpRes.status.BAD_REQUEST,
+          'Invalid referral code',
+          'The referral code provided does not exist',
+        );
+      }
+
+      referredBy = referrer.id;
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -55,8 +78,19 @@ export const RegisterController = async (
     // Expiry in 2 hours
     const verificationExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 Hours
 
-    // Generate Refferal Code
-    const referralCode = crypto.randomBytes(4).toString('hex'); // 4 characters
+    // Generate unique referral code
+    let referralCode;
+    let isUnique = false;
+
+    while (!isUnique) {
+      referralCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+      const existingCode = await database.user.findUnique({
+        where: { referralCode },
+      });
+      if (!existingCode) {
+        isUnique = true;
+      }
+    }
 
     // Create new user into database
     const user = await database.user.create({
@@ -66,6 +100,8 @@ export const RegisterController = async (
         password: hashedPassword,
         role: role as UserRole,
         referralCode,
+        referralPoints: 0,
+        referredBy,
         verificationToken,
         verificationExpiry,
       },
@@ -75,9 +111,70 @@ export const RegisterController = async (
         email: true,
         role: true,
         referralCode: true,
+        referralPoints: true,
         isVerified: true,
       },
     });
+
+    // Process referral rewards if referral code was used
+    if (referredBy) {
+      // Create referral transaction record
+      const referralTransaction = await database.referralTransaction.create({
+        data: {
+          referrerId: referredBy,
+          referredId: user.id,
+          pointsEarned: 100, // Points yang didapat referrer
+          discountPercentage: 10, // Discount yang didapat user baru
+          expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+        },
+      });
+
+      // Update referrer's points
+      await database.user.update({
+        where: { id: referredBy },
+        data: {
+          referralPoints: {
+            increment: 100,
+          },
+        },
+      });
+
+      // Find atau create referral-based promotion untuk welcome bonus
+      let welcomePromotion = await database.promotion.findFirst({
+        where: {
+          promoType: 'referral_based',
+          discountPercentage: 10,
+          startDate: { lte: new Date() },
+          endDate: { gte: new Date() },
+          deletedAt: null,
+        },
+      });
+
+      // Jika belum ada, create general referral promotion
+      if (!welcomePromotion) {
+        welcomePromotion = await database.promotion.create({
+          data: {
+            eventId: null, // Atau bisa dibuat nullable dan digunakan untuk semua event
+            promoType: 'referral_based',
+            discountPercentage: 10,
+            quota: 10000, // Large quota untuk welcome bonus
+            startDate: new Date(),
+            endDate: new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000), // 3 year
+          },
+        });
+      }
+
+      // Assign welcome bonus coupon to new user
+      await database.userCoupon.create({
+        data: {
+          userId: user.id,
+          promotionId: welcomePromotion.id,
+          isUsed: false,
+        },
+      });
+
+      referralPromotion = welcomePromotion;
+    }
 
     // Create activation link with token
     const activationLink = `${env.ACTIVATION_ACCOUNT_URL}?token=${verificationToken}`;
@@ -100,19 +197,15 @@ export const RegisterController = async (
 
     const compiledTemplateHtml = Handlebars.compile(templateHtml);
 
-    // logo_url path
-    const logo_url_path = path.resolve(
-      __dirname,
-      '../../lib/template/logo.png',
-    );
-
     const htmlToSend = compiledTemplateHtml({
       username: user.fullname,
       activate_link: activationLink,
-      expiry_hours: 2, // 2 hours
+      expiry_hours: 2,
       current_year: new Date().getFullYear(),
       email_timestamp: currentTimestamp,
-      logo_url: logo_url_path,
+      referral_bonus: referralPromotion
+        ? `Welcome! You got a ${referralPromotion.discountPercentage}% discount coupon for using a referral code!`
+        : null,
     });
 
     await transporter.sendMail({
@@ -122,14 +215,37 @@ export const RegisterController = async (
       html: htmlToSend,
     });
 
+    // Prepare response data
+    const responseData = {
+      ...user,
+      welcomeBonus: referralPromotion
+        ? {
+            discountPercentage: referralPromotion.discountPercentage,
+            expiresAt: referralPromotion.endDate,
+            message: `You received ${referralPromotion.discountPercentage}% welcome discount!`,
+          }
+        : null,
+    };
+
+    // // Send response
+    // res
+    //   .status(HttpRes.status.RESOURCE_CREATED)
+    //   .json(
+    //     ResponseHandler.success(
+    //       HttpRes.message.RESOURCE_CREATED +
+    //         `: user ${user.fullname} has been created`,
+    //       user,
+    //     ),
+    //   );
+
     // Send response
     res
       .status(HttpRes.status.RESOURCE_CREATED)
       .json(
         ResponseHandler.success(
           HttpRes.message.RESOURCE_CREATED +
-            `: user ${user.fullname} has been created`,
-          user,
+            `: user ${user.fullname} has been created${referralPromotion ? ' with referral bonus' : ''}`,
+          responseData,
         ),
       );
   } catch (error) {

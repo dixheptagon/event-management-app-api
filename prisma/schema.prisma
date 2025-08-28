@@ -15,8 +15,12 @@ model User {
   email         String   @unique
   password      String
   role          UserRole @default(customer)
-  referralCode  String?  @unique
-  points        Int      @default(0)
+
+// Referral fields - pastikan ada di schema
+  referralCode     String?  @unique        // Kode referral unik untuk user ini
+  referralPoints   Int      @default(0)    // Points yang dikumpulkan dari referral
+  referredBy       String?                 // ID dari user yang mereferensikan
+  
   isVerified         Boolean  @default(false)
   verificationToken      String?   
   verificationExpiry     DateTime?
@@ -58,11 +62,12 @@ model UserCoupon {
 
 model ReferralTransaction {
   id                 BigInt   @id @default(autoincrement())
-  referrerId         String   @db.VarChar()
-  referredId         String   @db.VarChar()
+  referrerId         String   @db.VarChar() // User whos gave referral code
+  referredId         String   @db.VarChar() // user whos get referral code
   pointsEarned       Int
   discountPercentage Int
   expiresAt          DateTime
+  status             ReferralStatus @default(active) // Tambahan untuk tracking status
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -70,6 +75,13 @@ model ReferralTransaction {
 
   referrer User @relation("Referrer", fields: [referrerId], references: [id])
   referred User @relation("Referred", fields: [referredId], references: [id])
+}
+
+// Tambahan enum untuk status referral
+enum ReferralStatus {
+  active
+  expired
+  redeemed
 }
 
 model Event {
@@ -128,7 +140,7 @@ model Ticket {
   id          BigInt       @id @default(autoincrement())
   eventId     BigInt
   userId      String       @db.VarChar()
-  ticketType  TicketType
+  ticketType  String
   price       Int
   discount    Int          @default(0)
   finalPrice  Int
@@ -149,31 +161,31 @@ enum TicketStatus {
   checked_in
 }
 
-enum TicketType {
-  VIP
-  Regular
-}
+
 
 model Promotion {
   id                 BigInt       @id @default(autoincrement())
-  eventId            BigInt
+  eventId            BigInt?      // Buat nullable untuk general promotions
   promoType          PromoType
   discountPercentage Int
   quota              Int
+  usedQuota          Int          @default(0) // Track berapa yang sudah digunakan
   startDate          DateTime
   endDate            DateTime
+  isActive           Boolean      @default(true) // Control active status
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  event              Event        @relation(fields: [eventId], references: [id])
+  event              Event?        @relation(fields: [eventId], references: [id])
   userCoupons        UserCoupon[]
 }
 
 enum PromoType {
   referral_based
   date_based
+  event_based
 }
 
 model Review {

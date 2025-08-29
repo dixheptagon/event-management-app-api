@@ -25,6 +25,7 @@ export const RegisterController = async (
   res: Response,
   next: NextFunction,
 ) => {
+  let transaction: any;
   try {
     // validate request body
     const { fullname, email, password, role, usedReferralCode } =
@@ -76,110 +77,120 @@ export const RegisterController = async (
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
     // Expiry in 2 hours
-    const verificationExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 Hours
+    const verificationExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000);
 
-    // Generate unique referral code
-    let referralCode;
-    let isUnique = false;
+    // Mulai transaction
+    transaction = await database.$transaction(async (tx: any) => {
+      // Generate unique referral code
+      let referralCode;
+      let isUnique = false;
 
-    while (!isUnique) {
-      referralCode = crypto.randomBytes(4).toString('hex').toUpperCase();
-      const existingCode = await database.user.findUnique({
-        where: { referralCode },
-      });
-      if (!existingCode) {
-        isUnique = true;
+      while (!isUnique) {
+        referralCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+        const existingCode = await database.user.findUnique({
+          where: { referralCode },
+        });
+        if (!existingCode) {
+          isUnique = true;
+        }
       }
-    }
 
-    // Create new user into database
-    const user = await database.user.create({
-      data: {
-        fullname,
-        email,
-        password: hashedPassword,
-        role: role as UserRole,
-        referralCode,
-        referralPoints: 0,
-        referredBy,
-        verificationToken,
-        verificationExpiry,
-      },
-      select: {
-        id: true,
-        fullname: true,
-        email: true,
-        role: true,
-        referralCode: true,
-        referralPoints: true,
-        isVerified: true,
-      },
-    });
-
-    // Process referral rewards if referral code was used
-    if (referredBy) {
-      // Create referral transaction record
-      const referralTransaction = await database.referralTransaction.create({
+      // Create new user
+      const user = await tx.user.create({
         data: {
-          referrerId: referredBy,
-          referredId: user.id,
-          pointsEarned: 100, // Points yang didapat referrer
-          discountPercentage: 10, // Discount yang didapat user baru
-          expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+          fullname,
+          email,
+          password: hashedPassword,
+          role: role as UserRole,
+          referralCode,
+          referralPoints: 0,
+          referredBy,
+          verificationToken,
+          verificationExpiry,
+        },
+        select: {
+          id: true,
+          fullname: true,
+          email: true,
+          role: true,
+          referralCode: true,
+          referralPoints: true,
+          isVerified: true,
         },
       });
 
-      // Update referrer's points
-      await database.user.update({
-        where: { id: referredBy },
-        data: {
-          referralPoints: {
-            increment: 10000, //referrer dapat 10000 points
-          },
-        },
-      });
+      let welcomePromotion = null;
+      let referralTransaction = null;
 
-      // Find atau create referral-based promotion untuk welcome bonus
-      let welcomePromotion = await database.promotion.findFirst({
-        where: {
-          promoType: 'referral_based',
-          discountPercentage: 10,
-          startDate: { lte: new Date() },
-          endDate: { gte: new Date() },
-          deletedAt: null,
-        },
-      });
-
-      // Jika belum ada, create general referral promotion
-      if (!welcomePromotion) {
-        welcomePromotion = await database.promotion.create({
+      // Process referral rewards jika digunakan
+      if (referredBy) {
+        // Create referral transaction record
+        referralTransaction = await tx.referralTransaction.create({
           data: {
-            eventId: null, // Atau bisa dibuat nullable dan digunakan untuk semua event
+            referrerId: referredBy,
+            referredId: user.id,
+            pointsEarned: 10000, // 10000 points per referral
+            discountPercentage: 10,
+            expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+          },
+        });
+
+        // Update referrer's points
+        await tx.user.update({
+          where: { id: referredBy },
+          data: {
+            referralPoints: {
+              increment: 10000,
+            },
+          },
+        });
+
+        // Find atau create referral-based promotion
+        welcomePromotion = await tx.promotion.findFirst({
+          where: {
             promoType: 'referral_based',
             discountPercentage: 10,
-            quota: 10000, // Large quota untuk welcome bonus
-            startDate: new Date(),
-            endDate: new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000), // 3 year
+            startDate: { lte: new Date() },
+            endDate: { gte: new Date() },
+            deletedAt: null,
+          },
+        });
+
+        // Jika belum ada, create general referral promotion
+        if (!welcomePromotion) {
+          welcomePromotion = await tx.promotion.create({
+            data: {
+              eventId: null,
+              promoType: 'referral_based',
+              discountPercentage: 10,
+              quota: 10000,
+              startDate: new Date(),
+              endDate: new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000),
+            },
+          });
+        }
+
+        // Assign welcome bonus coupon
+        await tx.userCoupon.create({
+          data: {
+            userId: user.id,
+            promotionId: welcomePromotion.id,
+            isUsed: false,
           },
         });
       }
 
-      // Assign welcome bonus coupon to new user
-      await database.userCoupon.create({
-        data: {
-          userId: user.id,
-          promotionId: welcomePromotion.id,
-          isUsed: false,
-        },
-      });
+      return {
+        user,
+        welcomePromotion,
+        referralTransaction,
+      };
+    });
 
-      referralPromotion = welcomePromotion;
-    }
-
-    // Create activation link with token
+    // Create activation link dengan token
     const activationLink = `${env.ACTIVATION_ACCOUNT_URL}?token=${verificationToken}`;
 
-    // Generate timestamp di server
+    // Generate timestamp
     const currentTimestamp = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -188,41 +199,40 @@ export const RegisterController = async (
       minute: '2-digit',
     });
 
-    // Send email verification link
+    // Send email verification link (di luar transaction)
     const templateHtmlDir = path.resolve(__dirname, '../../lib/template');
     const templateHtmlFile = 'account.activation.html';
     const templateHtmlPath = path.join(templateHtmlDir, templateHtmlFile);
 
     const templateHtml = fs.readFileSync(templateHtmlPath, 'utf-8');
-
     const compiledTemplateHtml = Handlebars.compile(templateHtml);
 
     const htmlToSend = compiledTemplateHtml({
-      username: user.fullname,
+      username: transaction.user.fullname,
       activate_link: activationLink,
       expiry_hours: 2,
       current_year: new Date().getFullYear(),
       email_timestamp: currentTimestamp,
-      referral_bonus: referralPromotion
-        ? `Welcome! You got a ${referralPromotion.discountPercentage}% discount coupon for using a referral code!`
+      referral_bonus: transaction.welcomePromotion
+        ? `Welcome! You got a ${transaction.welcomePromotion.discountPercentage}% discount coupon for using a referral code!`
         : null,
     });
 
     await transporter.sendMail({
       from: 'Admin <sender@gmail.com>',
-      to: user.email,
+      to: transaction.user.email,
       subject: 'Account Activation - ticketin.id',
       html: htmlToSend,
     });
 
     // Prepare response data
     const responseData = {
-      ...user,
-      welcomeBonus: referralPromotion
+      ...transaction.user,
+      welcomeBonus: transaction.welcomePromotion
         ? {
-            discountPercentage: referralPromotion.discountPercentage,
-            expiresAt: referralPromotion.endDate,
-            message: `You received ${referralPromotion.discountPercentage}% welcome discount!`,
+            discountPercentage: transaction.welcomePromotion.discountPercentage,
+            expiresAt: transaction.welcomePromotion.endDate,
+            message: `You received ${transaction.welcomePromotion.discountPercentage}% welcome discount!`,
           }
         : null,
     };
@@ -233,11 +243,12 @@ export const RegisterController = async (
       .json(
         ResponseHandler.success(
           HttpRes.message.RESOURCE_CREATED +
-            `: user ${user.fullname} has been created${referralPromotion ? ' with referral bonus' : ''}`,
+            `: user ${transaction.user.fullname} has been created${transaction.welcomePromotion ? ' with referral bonus' : ''}`,
           responseData,
         ),
       );
   } catch (error) {
+    // Jika terjadi error, transaction akan di-rollback otomatis
     next(error);
   }
 };

@@ -134,7 +134,7 @@ export const RegisterController = async (
         where: { id: referredBy },
         data: {
           referralPoints: {
-            increment: 100,
+            increment: 10000, //referrer dapat 10000 points
           },
         },
       });
@@ -226,17 +226,6 @@ export const RegisterController = async (
           }
         : null,
     };
-
-    // // Send response
-    // res
-    //   .status(HttpRes.status.RESOURCE_CREATED)
-    //   .json(
-    //     ResponseHandler.success(
-    //       HttpRes.message.RESOURCE_CREATED +
-    //         `: user ${user.fullname} has been created`,
-    //       user,
-    //     ),
-    //   );
 
     // Send response
     res

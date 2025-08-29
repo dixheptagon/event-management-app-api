@@ -29,13 +29,14 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-// import user router
+// import routers
 
 import authRouter from './routers/auth/auth.route';
+import referralRouter from './routers/referral/referral.route';
 
 // // use user router
 
-const routers = [authRouter];
+const routers = [authRouter, referralRouter];
 routers.forEach((router) => {
   app.use('/api', router);
 });

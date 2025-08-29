@@ -18,6 +18,7 @@ export const HttpRes = Object.freeze({
     BAD_REQUEST: 400,
     SERVICE_UNAVAILABLE: 503,
     CONFLICT: 409,
+    TOO_MANY_REQUESTS: 429,
   },
   message: {
     // success

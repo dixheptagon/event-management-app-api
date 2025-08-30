@@ -18,6 +18,8 @@ import transporter from '../../lib/config/nodemailer.transporter';
 import { ResponseHandler } from '../../lib/utils/response.handler';
 import { UserRole } from '@prisma/client';
 import { createToken } from '../../lib/utils/create.token';
+import { ref } from 'process';
+import { refreshToken } from '../../lib/utils/refresh.token';
 
 const saltRounds = 10;
 export const RegisterController = async (
@@ -484,7 +486,7 @@ export const LoginController = async (
       },
       env.JWT_SECRET,
       {
-        expiresIn: '1d',
+        expiresIn: '1d', // 1 day expiration
       },
     );
 
@@ -502,6 +504,57 @@ export const LoginController = async (
           },
         ),
       );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const SessionLoginController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const decodedToken = res?.locals?.payload;
+
+    // refresh token -> update expiry time
+    const token = refreshToken(
+      {
+        id: decodedToken.id,
+        email: decodedToken.email,
+        role: decodedToken.role,
+      },
+      env.JWT_SECRET,
+    );
+
+    // find user by id
+    const user = await database.user.findUnique({
+      where: { id: decodedToken.id },
+      select: {
+        fullname: true,
+        role: true,
+      },
+    });
+
+    // check if user exist
+    if (!user) {
+      throw new CustomError(
+        HttpRes.status.NOT_FOUND,
+        HttpRes.message.NOT_FOUND,
+        HttpRes.details.NOT_FOUND + ' : User not found',
+      );
+    }
+
+    // Send response
+    return res.status(HttpRes.status.OPERATION_SUCCESSFUL).json(
+      ResponseHandler.success(
+        HttpRes.message.OPERATION_SUCCESSFUL + ' :Session login successful',
+        {
+          token,
+          user,
+        },
+      ),
+    );
   } catch (error) {
     next(error);
   }

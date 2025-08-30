@@ -16,7 +16,7 @@ import env from '../../env';
 import crypto from 'crypto';
 import transporter from '../../lib/config/nodemailer.transporter';
 import { ResponseHandler } from '../../lib/utils/response.handler';
-import { UserRole } from '@prisma/client';
+import { DiscountType, UserRole } from '@prisma/client';
 import { createToken } from '../../lib/utils/create.token';
 import { ref } from 'process';
 import { refreshToken } from '../../lib/utils/refresh.token';
@@ -151,7 +151,8 @@ export const RegisterController = async (
         welcomePromotion = await tx.promotion.findFirst({
           where: {
             promoType: 'referral_based',
-            discountPercentage: 10,
+            discountType: 'percentage',
+            discountValue: 10,
             startDate: { lte: new Date() },
             endDate: { gte: new Date() },
             deletedAt: null,
@@ -164,10 +165,11 @@ export const RegisterController = async (
             data: {
               eventId: null,
               promoType: 'referral_based',
-              discountPercentage: 10,
+              discountType: 'percentage',
+              discountValue: 10,
               quota: 10000,
               startDate: new Date(),
-              endDate: new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000),
+              endDate: new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000), // 3 years
             },
           });
         }
@@ -232,9 +234,10 @@ export const RegisterController = async (
       ...transaction.user,
       welcomeBonus: transaction.welcomePromotion
         ? {
-            discountPercentage: transaction.welcomePromotion.discountPercentage,
+            discountType: transaction.welcomePromotion.discountType,
+            discountValue: transaction.welcomePromotion.discountValue,
             expiresAt: transaction.welcomePromotion.endDate,
-            message: `You received ${transaction.welcomePromotion.discountPercentage}% welcome discount!`,
+            message: `You received ${transaction.welcomePromotion.discountValue}% welcome discount!`,
           }
         : null,
     };

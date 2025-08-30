@@ -218,7 +218,7 @@ export const RegisterController = async (
       current_year: new Date().getFullYear(),
       email_timestamp: currentTimestamp,
       referral_bonus: transaction.welcomePromotion
-        ? `Welcome! You got a ${transaction.welcomePromotion.discountPercentage}% discount coupon for using a referral code!`
+        ? `Welcome! You got a ${transaction.welcomePromotion.discountValue}% discount coupon for using a referral code!`
         : null,
     });
 

@@ -108,6 +108,7 @@ model Event {
   promotions     Promotion[]
   reviews        Review[]
   eventMedia     EventMedia[]
+  tags           EventTag[]        @relation("EventTags") // relasi many-to-many ke Tag
 }
 
 enum EventType {
@@ -120,6 +121,15 @@ enum EventStatus {
   published
   completed
   cancelled
+}
+
+model EventTag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events    Event[]  @relation("EventTags")
 }
 
 model EventMedia {

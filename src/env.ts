@@ -10,14 +10,15 @@ export interface Config {
   NODE_ENV: string;
   DIRECT_URL: string;
   JWT_SECRET: string;
-  // CLOUD_NAME: string;
-  // CLOUD_API_KEY: string;
-  // CLOUD_API_SECRET: string;
   DATABASE_URL: string;
   DOMAIN_URL: string;
   ACTIVATION_ACCOUNT_URL: string;
   NODEMAILER_APP_EMAIL: string;
   NODEMAILER_APP_PASSWORD: string;
+  CLOUD_NAME: string;
+  CLOUD_API_KEY: string;
+  CLOUD_API_SECRET: string;
+  CLOUD_EVENT_IMAGE_FOLDER_PATH: string;
 }
 
 // create schema for validation
@@ -26,9 +27,6 @@ const schema = Yup.object().shape({
   NODE_ENV: Yup.string().default('development').required(),
   DIRECT_URL: Yup.string().required('DIRECT_URL is required'),
   JWT_SECRET: Yup.string().required('JWT_SECRET is required'),
-  // CLOUD_NAME: Yup.string().required('CLOUD_NAME is required'),
-  // CLOUD_API_KEY: Yup.string().required('CLOUD_API_KEY is required'),
-  // CLOUD_API_SECRET: Yup.string().required('CLOUD_API_SECRET is required'),
   DATABASE_URL: Yup.string().required('DATABASE_URL is required'),
   DOMAIN_URL: Yup.string().required('DOMAIN_URL is required'),
   ACTIVATION_ACCOUNT_URL: Yup.string().required(
@@ -39,6 +37,12 @@ const schema = Yup.object().shape({
   ),
   NODEMAILER_APP_PASSWORD: Yup.string().required(
     'NODEMAILER_APP_PASSWORD is required',
+  ),
+  CLOUD_NAME: Yup.string().required('CLOUD_NAME is required'),
+  CLOUD_API_KEY: Yup.string().required('CLOUD_API_KEY is required'),
+  CLOUD_API_SECRET: Yup.string().required('CLOUD_API_SECRET is required'),
+  CLOUD_EVENT_IMAGE_FOLDER_PATH: Yup.string().required(
+    'CLOUD_EVENT_IMAGE_FOLDER_PATH is required',
   ),
 });
 

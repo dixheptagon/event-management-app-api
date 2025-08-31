@@ -14,7 +14,7 @@ model User {
   fullname          String
   email         String   @unique
   password      String
-  role          UserRole @default(customer)
+  role          UserRole @default(CUSTOMER)
 
 // Referral fields - pastikan ada di schema
   referralCode     String?  @unique        // Kode referral unik untuk user ini
@@ -33,16 +33,15 @@ model User {
   referralsMade ReferralTransaction[] @relation("Referrer")
   referralsGot  ReferralTransaction[] @relation("Referred")
   events        Event[]               @relation("OrganizerEvents")
-  tickets       Ticket[]
   reviews       Review[]
   transactions  Transaction[]
   dashboards    Dashboard[]
 }
 
 enum UserRole {
-  customer
-  event_organizer
-  admin
+  CUSTOMER
+  EVENT_ORGANIZER
+  ADMIN
 }
 
 model UserCoupon {
@@ -67,7 +66,7 @@ model ReferralTransaction {
   pointsEarned       Int
   discountPercentage Int
   expiresAt          DateTime
-  status             ReferralStatus @default(active) // Tambahan untuk tracking status
+  status             ReferralStatus @default(ACTIVE) // Tambahan untuk tracking status
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -79,9 +78,9 @@ model ReferralTransaction {
 
 // Tambahan enum untuk status referral
 enum ReferralStatus {
-  active
-  expired
-  redeemed
+  ACTIVE
+  EXPIRED
+  REDEEMED
 }
 
 model Event {
@@ -89,12 +88,11 @@ model Event {
   organizerId    String       @db.VarChar()
   title          String
   description    String
-  price          Int
-  eventType      EventType
   category       String
-  location       String
   startDate      DateTime
   endDate        DateTime
+  location       String
+  venue          String
   totalSeats     Int
   availableSeats Int
   status         EventStatus
@@ -104,32 +102,31 @@ model Event {
   deletedAt   DateTime?
 
   organizer      User         @relation("OrganizerEvents", fields: [organizerId], references: [id])
-  tickets        Ticket[]
+  ticketTypes    TicketTypes[]
   promotions     Promotion[]
   reviews        Review[]
   eventMedia     EventMedia[]
-  tags           EventTag[]        @relation("EventTags") // relasi many-to-many ke Tag
+  tags           EventTag[]  
 }
 
-enum EventType {
-  free
-  paid
-}
 
 enum EventStatus {
-  draft
-  published
-  completed
-  cancelled
+  DRAFT
+  PUBLISHED
+  COMPLETED
+  CANCELLED 
 }
 
 model EventTag {
   id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  eventId   BigInt  
+  tag       String   
 
-  events    Event[]  @relation("EventTags")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  events    Event  @relation(fields: [eventId],references: [id])
 }
 
 model EventMedia {
@@ -144,37 +141,32 @@ model EventMedia {
   event   Event   @relation(fields: [eventId], references: [id])
 }
 
-model Ticket {
+model TicketTypes {
   id          BigInt       @id @default(autoincrement())
   eventId     BigInt
-  userId      String       @db.VarChar()
-  ticketType  String
+  name        String
   price       Int
-  discount    Int          @default(0)
-  finalPrice  Int
-  status      TicketStatus
+  quantity    Int
+  description String
+  ticketType  TicketType
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
   event       Event        @relation(fields: [eventId], references: [id])
-  user        User         @relation(fields: [userId], references: [id])
   transaction Transaction?
 }
 
-enum TicketStatus {
-  booked
-  cancelled
-  checked_in
+enum TicketType {
+  FREE
+  PAID
 }
-
-
 
 model Promotion {
   id                 BigInt       @id @default(autoincrement())
   eventId            BigInt?      // Buat nullable untuk general promotions
-  promoType          PromoType
+  promoType          String
   discountType       DiscountType
   discountValue      Int   // Bisa 10% atau 20000 tergantung type
   code               String?  @unique // optional, untuk kupon manual (misal: EARLYBIRD10)
@@ -196,13 +188,8 @@ model Promotion {
 
 
 enum DiscountType {
-  percentage
-  fixed_amount
-}
-enum PromoType {
-  referral_based
-  date_based
-  event_based
+  PERCENTAGE
+  FIXED_AMOUNT
 }
 
 model Review {
@@ -232,7 +219,7 @@ model Transaction {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  ticket        Ticket           @relation(fields: [ticketId], references: [id])
+  ticketTypes TicketTypes           @relation(fields: [ticketId], references: [id])
   user          User             @relation(fields: [userId], references: [id])
 }
 
@@ -241,11 +228,15 @@ enum TransactionStatus {
   success
   failed
   refunded
+  PENDING 
+  SUCCESS 
+  FAILED 
+  REFUNDED 
 }
 
 enum PaymentMethod {
-  qr_code
-  bank_transfer
+  QR_CODE 
+  BANK_TRANSFER
 }
 
 model Dashboard {
@@ -266,7 +257,7 @@ model Dashboard {
 }
 
 enum ReportType {
-  daily
-  monthly
-  yearly
+  DAILY 
+  MONTHLY 
+  YEAR
 }

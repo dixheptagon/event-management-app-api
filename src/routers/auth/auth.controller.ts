@@ -150,8 +150,8 @@ export const RegisterController = async (
         // Find atau create referral-based promotion
         welcomePromotion = await tx.promotion.findFirst({
           where: {
-            promoType: 'referral_based',
-            discountType: 'percentage',
+            promoType: 'REFERRAL_BASED',
+            discountType: 'PERCENTAGE',
             discountValue: 10,
             startDate: { lte: new Date() },
             endDate: { gte: new Date() },
@@ -164,8 +164,8 @@ export const RegisterController = async (
           welcomePromotion = await tx.promotion.create({
             data: {
               eventId: null,
-              promoType: 'referral_based',
-              discountType: 'percentage',
+              promoType: 'REFERRAL_BASED',
+              discountType: 'PERCENTAGE',
               discountValue: 10,
               quota: 10000,
               startDate: new Date(),

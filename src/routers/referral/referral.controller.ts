@@ -171,8 +171,8 @@ export const RedeemPointsController = async (
     // Find atau create redemption promotion
     let redemptionPromotion = await database.promotion.findFirst({
       where: {
-        promoType: 'referral_based',
-        discountType: 'percentage',
+        promoType: 'REFERRAL_BASED',
+        discountType: 'PERCENTAGE',
         discountValue: discountPercentage,
         startDate: { lte: new Date() },
         endDate: { gte: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) },
@@ -184,8 +184,8 @@ export const RedeemPointsController = async (
       redemptionPromotion = await database.promotion.create({
         data: {
           eventId: 1, // General promotion atau bisa dibuat nullable
-          promoType: 'referral_based',
-          discountType: 'percentage',
+          promoType: 'REFERRAL_BASED',
+          discountType: 'PERCENTAGE',
           discountValue: discountPercentage,
           quota: 100,
           startDate: new Date(),

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Activation</title>
+  </head>
+  <body
+    style="
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    "
+  >
+    <!-- Main Container -->
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="background-color: #f4f4f4; padding: 20px"
+    >
+      <tr>
+        <td align="center">
+          <!-- Email Container -->
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              background-color: #ffffff;
+              border-radius: 10px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+              max-width: 600px;
+            "
+          >
+            <!-- Header -->
+            <tr>
+              <td
+                style="
+                  padding: 30px 30px 20px 30px;
+                  text-align: center;
+                  border-bottom: 3px solid #0a2d52;
+                "
+              >
+                <div
+                  style="
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #0a2d52;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <!-- Modified Image to center -->
+                  <img
+                    src="https://res.cloudinary.com/dzpcr6tzh/image/upload/v1756391824/ticketin_logo_event-management-app_-removebg_rosd8k.png"
+                    alt="logo Ticketin.id"
+                    style="display: block; margin: 0 auto; max-width: 100px"
+                  />
+                </div>
+                <h1
+                  style="
+                    font-size: 28px;
+                    color: #333333;
+                    margin: 10px 0;
+                    font-weight: normal;
+                  "
+                >
+                  Welcome aboard, {{username}}!
+                </h1>
+              </td>
+            </tr>
+
+            <!-- Content -->
+            <tr>
+              <td style="padding: 30px">
+                <p style="margin: 0 0 15px 0; font-size: 16px">
+                  Hi <strong>{{username}}</strong>,
+                </p>
+
+                <p style="margin: 0 0 20px 0; font-size: 16px">
+                  Thanks for signing up! To complete your registration and start
+                  using Ticketin.id, please activate your account by clicking
+                  the button below:
+                </p>
+
+                {{#if referral_bonus}}
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="margin: 25px 0"
+                >
+                  <tr>
+                    <td
+                      style="
+                        background-color: #e6f7ff;
+                        border: 1px solid #91d5ff;
+                        padding: 15px;
+                        border-radius: 5px;
+                      "
+                    >
+                      <p style="margin: 0; font-size: 14px; color: #0050b3">
+                        🎉 {{referral_bonus}}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                {{/if}}
+
+                <!-- Button -->
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="margin: 25px 0"
+                >
+                  <tr>
+                    <td align="center">
+                      <table cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td
+                            style="
+                              background-color: #0a2d52;
+                              border-radius: 5px;
+                              text-align: center;
+                            "
+                          >
+                            <a
+                              href="{{activate_link}}"
+                              style="
+                                display: inline-block;
+                                padding: 15px 30px;
+                                font-size: 16px;
+                                color: #ffffff;
+                                text-decoration: none;
+                                font-weight: bold;
+                                border-radius: 5px;
+                              "
+                              >Activate My Account</a
+                            >
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Expiry Notice -->
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="margin: 25px 0"
+                >
+                  <tr>
+                    <td
+                      style="
+                        background-color: #fff3cd;
+                        border: 1px solid #ffeaa7;
+                        padding: 15px;
+                        border-radius: 5px;
+                      "
+                    >
+                      <p style="margin: 0; font-size: 14px; color: #856404">
+                        <strong>⏰ Important:</strong> This activation link will
+                        expire in <strong>{{expiry_hours}} hours</strong>.
+                        Please activate your account as soon as possible.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 20px 0 10px 0; font-size: 16px">
+                  If the button doesn't work, you can copy and paste this link
+                  into your browser:
+                </p>
+                <p
+                  style="
+                    margin: 0 0 20px 0;
+                    font-size: 14px;
+                    color: #007bff;
+                    word-break: break-all;
+                  "
+                >
+                  {{activate_link}}
+                </p>
+
+                <p style="margin: 0 0 10px 0; font-size: 16px">
+                  If you didn't create an account with us, please ignore this
+                  email.
+                </p>
+
+                <p style="margin: 20px 0 0 0; font-size: 16px">
+                  Best regards,<br />
+                  <strong>Ticketin.id Team</strong>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                style="
+                  padding: 20px 30px 30px 30px;
+                  text-align: center;
+                  border-top: 1px solid #eeeeee;
+                "
+              >
+                <p style="margin: 0 0 10px 0; font-size: 12px; color: #666666">
+                  © {{current_year}} Ticketin.id. All rights reserved.
+                </p>
+                <div style="font-size: 11px; color: #999999; margin-top: 10px">
+                  Email sent on: {{email_timestamp}}
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

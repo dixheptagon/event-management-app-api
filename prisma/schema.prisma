@@ -1,25 +1,272 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// schema.prisma
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql" 
   url      = env("DATABASE_URL")
 }
 
-model Sample {
+model User {
+  id            String   @id @default(uuid())
+  fullname          String
+  email         String   @unique
+  password      String
+  role          UserRole @default(customer)
+
+// Referral fields - pastikan ada di schema
+  referralCode     String?  @unique        // Kode referral unik untuk user ini
+  referralPoints   Int      @default(0)    // Points yang dikumpulkan dari referral
+  referredBy       String?                 // ID dari user yang mereferensikan
+  
+  isVerified         Boolean  @default(false)
+  verificationToken      String?   
+  verificationExpiry     DateTime?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  coupons       UserCoupon[]
+  referralsMade ReferralTransaction[] @relation("Referrer")
+  referralsGot  ReferralTransaction[] @relation("Referred")
+  events        Event[]               @relation("OrganizerEvents")
+  tickets       Ticket[]
+  reviews       Review[]
+  transactions  Transaction[]
+  dashboards    Dashboard[]
+}
+
+enum UserRole {
+  customer
+  event_organizer
+  admin
+}
+
+model UserCoupon {
+  id           Int        @id @default(autoincrement())
+  userId       String     @db.VarChar()
+  promotionId  BigInt
+  isUsed       Boolean    @default(false)
+  usedAt       DateTime?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  user         User       @relation(fields: [userId], references: [id])
+  promotion    Promotion  @relation(fields: [promotionId], references: [id])
+}
+
+model ReferralTransaction {
+  id                 BigInt   @id @default(autoincrement())
+  referrerId         String   @db.VarChar() // User whos gave referral code
+  referredId         String   @db.VarChar() // user whos get referral code
+  pointsEarned       Int
+  discountPercentage Int
+  expiresAt          DateTime
+  status             ReferralStatus @default(active) // Tambahan untuk tracking status
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  referrer User @relation("Referrer", fields: [referrerId], references: [id])
+  referred User @relation("Referred", fields: [referredId], references: [id])
+}
+
+// Tambahan enum untuk status referral
+enum ReferralStatus {
+  active
+  expired
+  redeemed
+}
+
+model Event {
+  id             BigInt       @id @default(autoincrement())
+  organizerId    String       @db.VarChar()
+  title          String
+  description    String
+  price          Int
+  eventType      EventType
+  category       String
+  location       String
+  startDate      DateTime
+  endDate        DateTime
+  totalSeats     Int
+  availableSeats Int
+  status         EventStatus
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  organizer      User         @relation("OrganizerEvents", fields: [organizerId], references: [id])
+  tickets        Ticket[]
+  promotions     Promotion[]
+  reviews        Review[]
+  eventMedia     EventMedia[]
+  tags           EventTag[]        @relation("EventTags") // relasi many-to-many ke Tag
+}
+
+enum EventType {
+  free
+  paid
+}
+
+enum EventStatus {
+  draft
+  published
+  completed
+  cancelled
+}
+
+model EventTag {
   id        Int      @id @default(autoincrement())
-  name      String
-  code      String   @unique
+  name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("samples") // if you want to use snake_case format
+  events    Event[]  @relation("EventTags")
+}
+
+model EventMedia {
+  id      BigInt @id @default(autoincrement())
+  eventId BigInt
+  url     String
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  
+  event   Event   @relation(fields: [eventId], references: [id])
+}
+
+model Ticket {
+  id          BigInt       @id @default(autoincrement())
+  eventId     BigInt
+  userId      String       @db.VarChar()
+  ticketType  String
+  price       Int
+  discount    Int          @default(0)
+  finalPrice  Int
+  status      TicketStatus
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  event       Event        @relation(fields: [eventId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
+  transaction Transaction?
+}
+
+enum TicketStatus {
+  booked
+  cancelled
+  checked_in
+}
+
+
+
+model Promotion {
+  id                 BigInt       @id @default(autoincrement())
+  eventId            BigInt?      // Buat nullable untuk general promotions
+  promoType          PromoType
+  discountType       DiscountType
+  discountValue      Int   // Bisa 10% atau 20000 tergantung type
+  code               String?  @unique // optional, untuk kupon manual (misal: EARLYBIRD10)
+  minPurchaseAmount Int?     // opsional, diskon berlaku kalau belanja > Rp 100k
+  maxDiscountAmount Int?     // opsional, biar diskon nggak kebablasan
+  quota              Int
+  usedQuota          Int          @default(0) // Track berapa yang sudah digunakan
+  startDate          DateTime
+  endDate            DateTime
+  isActive           Boolean      @default(true) // Control active status
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  event              Event?        @relation(fields: [eventId], references: [id])
+  userCoupons        UserCoupon[]
+}
+
+
+enum DiscountType {
+  percentage
+  fixed_amount
+}
+enum PromoType {
+  referral_based
+  date_based
+  event_based
+}
+
+model Review {
+  id        BigInt   @id @default(autoincrement())
+  eventId   BigInt
+  userId    String   @db.VarChar()
+  rating    Int
+  review    String
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  event     Event    @relation(fields: [eventId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id            BigInt           @id @default(autoincrement())
+  ticketId      BigInt           @unique
+  userId        String           @db.VarChar()
+  amount        Int
+  status        TransactionStatus
+  paymentMethod PaymentMethod
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  ticket        Ticket           @relation(fields: [ticketId], references: [id])
+  user          User             @relation(fields: [userId], references: [id])
+}
+
+enum TransactionStatus {
+  pending
+  success
+  failed
+  refunded
+}
+
+enum PaymentMethod {
+  qr_code
+  bank_transfer
+}
+
+model Dashboard {
+  id             BigInt   @id @default(autoincrement())
+  organizerId    String   @db.VarChar()
+  totalEvents    Int
+  totalAttendees Int
+  totalRevenue   Int
+  reportType     ReportType
+  periodStart    DateTime
+  periodEnd      DateTime
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  organizer      User     @relation(fields: [organizerId], references: [id])
+}
+
+enum ReportType {
+  daily
+  monthly
+  yearly
 }

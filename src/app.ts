@@ -1,63 +1,48 @@
-import express, {
-  json,
-  urlencoded,
-  Express,
-  Request,
-  Response,
-  NextFunction,
-} from 'express';
+import express, { Request, Response, Application } from 'express';
+import bodyParser from 'body-parser';
+import { requestLogger } from './lib/middleware/request.logger';
+import { errorMiddleware } from './lib/middleware/error.handler';
 import cors from 'cors';
-import { PORT } from './config';
-import { MainRouter } from './routers/main.router';
-import { AppError } from './utils/app.error';
-import { NotFoundMiddleware } from './middlewares/not-found.middleware';
-import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
 
-export default class App {
-  private app: Express;
+// setup express
+const app: Application = express();
 
-  constructor() {
-    this.app = express();
-    this.configure();
-    this.routes();
-    this.handleError();
-  }
+// setup middleware : CORS
+app.use(cors()); // Semua client dapat mengakses API kita
 
-  private configure(): void {
-    this.app.use(cors());
-    this.app.use(json());
-    this.app.use(urlencoded({ extended: true }));
-  }
+// setup middleware: body parser
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-  private handleError(): void {
-    /*
-      📒 Docs:
-      This is a not found error handler.
-    */
-    this.app.use(NotFoundMiddleware.handle());
+// setup middleware: LOGGING
+app.use(requestLogger);
 
-    /*
-        📒 Docs:
-        This is a centralized error-handling middleware.
-    */
-    this.app.use(ErrorHandlerMiddleware.handle());
-  }
+// expose public folder
+app.use('/public', express.static('public'));
 
-  private routes(): void {
-    const mainRouter = new MainRouter();
+// setup middleware: CORS (Cross-Origin Resource Sharing)
 
-    this.app.get('/api', (req: Request, res: Response) => {
-      res.send(
-        `Hello, Purwadhika student 👋. Have fun working on your mini project ☺️`
-      );
-    });
+// define root routes
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({
+    message: 'Welcome to the Express server!',
+  });
+});
 
-    this.app.use(mainRouter.getRouter());
-  }
+// import routers
 
-  public start(): void {
-    this.app.listen(PORT, () => {
-      console.log(`➜ [API] Local: http://localhost:${PORT}/`);
-    });
-  }
-}
+import authRouter from './routers/auth/auth.route';
+import referralRouter from './routers/referral/referral.route';
+
+// // use user router
+
+const routers = [authRouter, referralRouter];
+routers.forEach((router) => {
+  app.use('/api', router);
+});
+
+// setup error handler middleware
+app.use(errorMiddleware);
+
+// export app for server
+export default app;

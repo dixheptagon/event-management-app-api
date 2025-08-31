@@ -90,7 +90,8 @@ export const GetReferralStatsController = async (
           include: {
             promotion: {
               select: {
-                discountPercentage: true,
+                discountType: true,
+                discountValue: true,
                 endDate: true,
                 promoType: true,
               },
@@ -124,7 +125,8 @@ export const GetReferralStatsController = async (
       })),
       referredBy: user.referralsGot[0]?.referrer.fullname || null,
       availableCoupons: user.coupons.map((coupon) => ({
-        discountPercentage: coupon.promotion.discountPercentage,
+        discountType: coupon.promotion.discountType,
+        discountValue: coupon.promotion.discountValue,
         expiresAt: coupon.promotion.endDate,
         type: coupon.promotion.promoType,
       })),
@@ -170,7 +172,8 @@ export const RedeemPointsController = async (
     let redemptionPromotion = await database.promotion.findFirst({
       where: {
         promoType: 'referral_based',
-        discountPercentage,
+        discountType: 'percentage',
+        discountValue: discountPercentage,
         startDate: { lte: new Date() },
         endDate: { gte: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) },
         deletedAt: null,
@@ -182,7 +185,8 @@ export const RedeemPointsController = async (
         data: {
           eventId: 1, // General promotion atau bisa dibuat nullable
           promoType: 'referral_based',
-          discountPercentage,
+          discountType: 'percentage',
+          discountValue: discountPercentage,
           quota: 100,
           startDate: new Date(),
           endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
@@ -211,7 +215,8 @@ export const RedeemPointsController = async (
 
     res.status(HttpRes.status.RESOURCE_CREATED).json(
       ResponseHandler.success('Points redeemed successfully', {
-        discountPercentage: redemptionPromotion.discountPercentage,
+        discountType: redemptionPromotion.discountType,
+        discountValue: redemptionPromotion.discountValue,
         expiryDate: redemptionPromotion.endDate,
         pointsUsed: pointsToRedeem,
         remainingPoints: user.referralPoints - pointsToRedeem,

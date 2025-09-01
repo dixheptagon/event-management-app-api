@@ -77,11 +77,11 @@ export const CreateEventSchema = Yup.object().shape({
         ),
         ticketType: Yup.string()
           .required('Ticket type is required')
-          .oneOf(['paid', 'free'], 'Please select a valid ticket type'),
+          .oneOf(['PAID', 'FREE'], 'Please select a valid ticket type'),
 
         price: Yup.number()
           .when('ticketType', {
-            is: 'paid',
+            is: 'PAID',
             then: (schema) =>
               schema
                 .required('Price is required for paid tickets')
@@ -100,18 +100,22 @@ export const CreateEventSchema = Yup.object().shape({
     .min(1, 'At least one tag is required')
     .max(10, 'Maximum 10 tags allowed'),
 
-  image: Yup.mixed()
-    .required('Image is required')
-    .test('fileSize', 'File size too large (max 5MB)', (value) => {
-      if (!value) return true;
-      return (value as File).size <= 5 * 1024 * 1024; // 5MB
-    })
-    .test('fileType', 'Unsupported file format', (value) => {
-      if (!value) return true;
-      return ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'].includes(
-        (value as File).type,
-      );
-    }),
+  // image: Yup.mixed()
+  //   .required('Image is required')
+  //   .test('fileSize', 'File size too large (max 5MB)', (value) => {
+  //     if (!value) return true;
+  //     return (value as File).size <= 5 * 1024 * 1024; // 5MB
+  //   })
+  //   .test('fileType', 'Unsupported file format', (value) => {
+  //     if (!value) return true;
+  //     return ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'].includes(
+  //       (value as File).type,
+  //     );
+  //   }),
 
   promotions: Yup.array().of(PromotionValidationSchema),
+
+  isDraft: Yup.boolean().default(false),
 });
+
+// export type CreateEventTypeSchema = Yup.InferType<typeof CreateEventSchema>;

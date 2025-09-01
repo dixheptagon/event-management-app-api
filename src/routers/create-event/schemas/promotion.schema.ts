@@ -24,7 +24,7 @@ export const PromotionValidationSchema = Yup.object().shape({
     }),
 
   code: Yup.string()
-    .nullable()
+    .required('Promo code is required')
     .matches(
       /^[A-Z0-9_]+$/,
       'Promo code can only contain uppercase letters, numbers, and underscores',

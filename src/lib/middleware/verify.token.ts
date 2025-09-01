@@ -22,6 +22,7 @@ export const verifyToken = (
 
     const decodedToken = jwt.verify(token!, process.env.JWT_SECRET!);
 
+    // Change to req.user (NEED FIX)
     res.locals.payload = decodedToken;
     next();
   } catch (error) {

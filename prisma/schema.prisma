@@ -224,10 +224,6 @@ model Transaction {
 }
 
 enum TransactionStatus {
-  pending
-  success
-  failed
-  refunded
   PENDING 
   SUCCESS 
   FAILED 

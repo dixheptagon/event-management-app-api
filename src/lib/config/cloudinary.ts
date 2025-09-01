@@ -13,8 +13,6 @@ export const cloudinaryUpload = (file: Buffer) => {
       .upload_stream(
         {
           folder: env.CLOUD_EVENT_IMAGE_FOLDER_PATH, // 👈 folder Cloudinary
-          use_filename: true, // optional
-          unique_filename: false, // optional
         },
         (error, uploadResult) => {
           if (error) {

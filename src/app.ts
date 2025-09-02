@@ -34,10 +34,16 @@ app.get('/', (req: Request, res: Response) => {
 import authRouter from './routers/auth/auth.route';
 import referralRouter from './routers/referral/referral.route';
 import CreateEventRouter from './routers/create-event/create.event.route';
+import ListEventsRouter from './routers/list-events/list.events.route';
 
 // // use user router
 
-const routers = [authRouter, referralRouter, CreateEventRouter];
+const routers = [
+  authRouter,
+  referralRouter,
+  CreateEventRouter,
+  ListEventsRouter,
+];
 routers.forEach((router) => {
   app.use('/api', router);
 });

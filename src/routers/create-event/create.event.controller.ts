@@ -13,6 +13,7 @@ export const CreateEventController = async (
 ) => {
   try {
     // Step 1: Extract raw data from request body
+
     const {
       name,
       description,
@@ -36,6 +37,7 @@ export const CreateEventController = async (
     let parsedPromotions: any[] = [];
 
     try {
+      // Parse ticketTypes, tags, and promotions
       parsedTicketTypes =
         typeof ticketTypes === 'string'
           ? JSON.parse(ticketTypes)
@@ -45,12 +47,6 @@ export const CreateEventController = async (
         typeof promotions === 'string'
           ? JSON.parse(promotions)
           : promotions || [];
-
-      console.log('Parsed data:', {
-        parsedTicketTypes,
-        parsedTags,
-        parsedPromotions,
-      });
     } catch (parseError) {
       throw new CustomError(
         HttpRes.status.BAD_REQUEST,
@@ -79,13 +75,14 @@ export const CreateEventController = async (
       isDraft,
     };
 
+    console.log('dataToValidate', dataToValidate);
+
     // Step 4: Validate the prepared data
     const validatedData = await CreateEventSchema.validate(dataToValidate, {
       abortEarly: false,
     });
 
-    console.log('Validated data:', validatedData);
-    console.log('>>>');
+    console.log('validatedData', validatedData);
 
     // Step 5: Get user details from Authorization
     const decodedToken = res?.locals?.payload;
@@ -109,8 +106,6 @@ export const CreateEventController = async (
     if (req.file) {
       imageFile = req.file;
     }
-
-    console.log('Image file:', imageFile);
 
     // Step 7: Create DateTime objects
     let startDateTime: Date;
@@ -153,7 +148,6 @@ export const CreateEventController = async (
     }
 
     // Step 8: Database transaction
-    console.log('Starting database transaction...');
 
     const transaction = await database.$transaction(async (tx) => {
       const event = await tx.event.create({
@@ -172,13 +166,10 @@ export const CreateEventController = async (
         },
       });
 
-      console.log('Event created:', event.id);
-
       // Handle image upload if exists
       let imageToUpload = null;
       if (imageFile) {
         try {
-          console.log('Uploading image to cloudinary...');
           const uploadEventImageToCloudinary: any = await cloudinaryUpload(
             imageFile.buffer,
           );
@@ -195,10 +186,7 @@ export const CreateEventController = async (
               url: uploadEventImageToCloudinary.url,
             },
           });
-
-          console.log('Image uploaded and saved:', imageToUpload.id);
         } catch (uploadError) {
-          console.error('Image upload error:', uploadError);
           throw new CustomError(
             HttpRes.status.INTERNAL_SERVER_ERROR,
             'Failed to upload image',
@@ -217,8 +205,6 @@ export const CreateEventController = async (
         })),
       });
 
-      console.log('Event tags created:', eventTags);
-
       // Handle ticket types
       const eventTicketTypes = await tx.ticketTypes.createMany({
         data: (validatedData.ticketTypes as any).map((ticketType: any) => ({
@@ -230,8 +216,6 @@ export const CreateEventController = async (
           ticketType: ticketType.ticketType,
         })),
       });
-
-      console.log('Ticket types created:', eventTicketTypes);
 
       // Handle event promotions
       let eventPromotions = null;
@@ -268,7 +252,7 @@ export const CreateEventController = async (
             throw new CustomError(
               HttpRes.status.CONFLICT,
               'Promotion code already exists',
-              `Existing codes: ${duplicateCodes.join(', ')}`,
+              `Existing Promotions codes: ${duplicateCodes.join(', ')}`,
             );
           }
         }
@@ -287,8 +271,6 @@ export const CreateEventController = async (
             endDate: promotion.endDate,
           })),
         });
-
-        console.log('Event promotions created:', eventPromotions);
       }
 
       return {
@@ -299,9 +281,6 @@ export const CreateEventController = async (
         eventPromotions,
       };
     });
-
-    console.log('Database transaction completed.');
-    console.log(transaction);
 
     // Step 8: Fetch complete event data with relations
     const completeEvent = await database.event.findUnique({
@@ -359,9 +338,11 @@ export const CreateEventController = async (
       },
     });
 
+    console.log('isDraft', isDraft);
+
     res.status(HttpRes.status.RESOURCE_CREATED).json(
       ResponseHandler.success(
-        isDraft
+        isDraft == true
           ? 'Event saved as draft successfully 🎉✨'
           : 'Event created and published successfully 🎉✨',
         {
@@ -380,7 +361,7 @@ export const CreateEventController = async (
       ),
     );
   } catch (error) {
-    console.error('CreateEventController error:', error);
+    console.log(error);
     // Handle Yup validation errors
     if (error instanceof Error && error.name === 'ValidationError') {
       return res

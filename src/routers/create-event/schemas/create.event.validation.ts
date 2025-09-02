@@ -30,6 +30,11 @@ export const CreateEventSchema = Yup.object().shape({
 
   startDate: Yup.date()
     .required('Start date is required')
+    // date must be in the future not in the past or today
+    .min(
+      new Date(Date.now() + 24 * 60 * 60 * 1000),
+      'Start date must be in the future(not in the past or today)',
+    )
     .min(new Date(), 'Start date cannot be in the past'),
 
   endDate: Yup.date()
@@ -87,9 +92,35 @@ export const CreateEventSchema = Yup.object().shape({
                 .required('Price is required for paid tickets')
                 .min(0, 'Price cannot be negative')
                 .max(10000000, 'Price seems too large'),
-            otherwise: (schema) => schema.notRequired().nullable(),
+            otherwise: (schema) =>
+              schema
+                .notRequired()
+                .default(0) // Set default 0 untuk FREE tickets
+                .transform((value, originalValue) => {
+                  // Handle empty string, null, undefined, NaN
+                  if (
+                    originalValue === '' ||
+                    originalValue === null ||
+                    originalValue === undefined ||
+                    isNaN(value)
+                  ) {
+                    return 0; // Always return 0 for FREE tickets
+                  }
+                  return Number(value);
+                }),
           })
-          .transform((value) => (isNaN(value) ? undefined : value)), // handle NaN
+          .transform((value, originalValue) => {
+            // Global transform - handle NaN dan empty values
+            if (
+              isNaN(value) ||
+              originalValue === '' ||
+              originalValue === null ||
+              originalValue === undefined
+            ) {
+              return 0; // Default to 0
+            }
+            return Number(value);
+          }),
       }),
     )
     .min(1, 'At least one ticket type is required')

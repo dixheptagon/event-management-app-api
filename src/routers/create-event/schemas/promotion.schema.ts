@@ -33,6 +33,16 @@ export const PromotionValidationSchema = Yup.object().shape({
     .max(20, 'Promo code cannot exceed 20 characters'),
 
   minPurchaseAmount: Yup.number()
+    .transform((value, originalValue) => {
+      if (
+        originalValue === '' ||
+        originalValue === null ||
+        originalValue === undefined
+      ) {
+        return null; // Return null instead of NaN
+      }
+      return Number(originalValue);
+    })
     .nullable()
     .optional()
     .positive('Minimum purchase amount must be positive')
@@ -40,6 +50,16 @@ export const PromotionValidationSchema = Yup.object().shape({
     .max(100000000, 'Maximum purchase amount is Rp 100,000,000'),
 
   maxDiscountAmount: Yup.number()
+    .transform((value, originalValue) => {
+      if (
+        originalValue === '' ||
+        originalValue === null ||
+        originalValue === undefined
+      ) {
+        return null; // Return null instead of NaN
+      }
+      return Number(originalValue);
+    })
     .nullable()
     .optional()
     .positive('Maximum discount amount must be positive')

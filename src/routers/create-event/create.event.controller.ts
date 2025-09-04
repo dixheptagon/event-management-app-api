@@ -75,14 +75,10 @@ export const CreateEventController = async (
       isDraft,
     };
 
-    console.log('dataToValidate', dataToValidate);
-
     // Step 4: Validate the prepared data
     const validatedData = await CreateEventSchema.validate(dataToValidate, {
       abortEarly: false,
     });
-
-    console.log('validatedData', validatedData);
 
     // Step 5: Get user details from Authorization
     const decodedToken = res?.locals?.payload;
@@ -338,8 +334,6 @@ export const CreateEventController = async (
       },
     });
 
-    console.log('isDraft', isDraft);
-
     res.status(HttpRes.status.RESOURCE_CREATED).json(
       ResponseHandler.success(
         isDraft == true
@@ -361,7 +355,6 @@ export const CreateEventController = async (
       ),
     );
   } catch (error) {
-    console.log(error);
     // Handle Yup validation errors
     if (error instanceof Error && error.name === 'ValidationError') {
       return res

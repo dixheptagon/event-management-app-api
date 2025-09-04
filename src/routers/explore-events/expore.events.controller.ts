@@ -11,7 +11,6 @@ export const getAllEventsController = async (
   try {
     let { keyword, location, category } = req.query;
 
-    console.log('category', category);
     if (category === 'All Events') category = undefined;
 
     const events = await database.event.findMany({

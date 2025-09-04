@@ -22,8 +22,6 @@ export const getListEventsController = async (
       take: 12,
     });
 
-    console.log('events', events);
-
     res
       .status(HttpRes.status.OK)
       .json(ResponseHandler.success('Get list events successfully', events));

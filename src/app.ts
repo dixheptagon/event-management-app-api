@@ -35,6 +35,7 @@ import authRouter from './routers/auth/auth.route';
 import referralRouter from './routers/referral/referral.route';
 import CreateEventRouter from './routers/create-event/create.event.route';
 import ListEventsRouter from './routers/list-events/list.events.route';
+import ExploreEventsRouter from './routers/explore-events/explore.events.route';
 
 // // use user router
 
@@ -43,6 +44,7 @@ const routers = [
   referralRouter,
   CreateEventRouter,
   ListEventsRouter,
+  ExploreEventsRouter,
 ];
 routers.forEach((router) => {
   app.use('/api', router);

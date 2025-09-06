@@ -37,6 +37,7 @@ import CreateEventRouter from './routers/create-event/create.event.route';
 import ListEventsRouter from './routers/list-events/list.events.route';
 import ExploreEventsRouter from './routers/explore-events/explore.events.route';
 import EventDetailsRouter from './routers/event-details/event.details.route';
+import DashboardRouter from './routers/dashboard/dashboard.route';
 
 // // use user router
 
@@ -47,6 +48,7 @@ const routers = [
   ListEventsRouter,
   ExploreEventsRouter,
   EventDetailsRouter,
+  DashboardRouter,
 ];
 routers.forEach((router) => {
   app.use('/api', router);

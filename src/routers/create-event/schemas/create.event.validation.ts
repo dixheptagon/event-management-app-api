@@ -22,7 +22,7 @@ export const CreateEventSchema = Yup.object().shape({
   description: Yup.string()
     .required('Description is required')
     .min(10, 'Description must be at least 10 characters')
-    .max(1000, 'Description must be less than 1000 characters'),
+    .max(100000, 'Description must be less than 100000 characters'),
 
   category: Yup.string()
     .required('Category is required')

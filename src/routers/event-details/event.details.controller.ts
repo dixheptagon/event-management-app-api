@@ -56,8 +56,6 @@ export const getEventDetailsController = async (
         ),
       );
   } catch (error) {
-    console.log(error);
-
     next(error);
   }
 };
